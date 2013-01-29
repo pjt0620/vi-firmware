@@ -34,6 +34,13 @@ uint64_t numberWriter(CanSignal* signal, CanSignal* signals,
 uint64_t numberWriter(CanSignal* signal, CanSignal* signals,
         int signalCount, cJSON* value, bool* send, uint64_t data) {
     checkWritePermission(signal, send);
+    double numberValue = value->valuedouble;
+    if(signal->minValue != signal->maxValue && (
+            numberValue < signal->minValue || numberValue > signal->maxValue)) {
+        debug("%d is outside the valid range for %s, %d to %d", numberValue,
+                signal->genericName, signal->minValue, signal->maxValue);
+        send = false;
+    }
     return encodeCanSignal(signal, value->valuedouble, data);
 }
 
