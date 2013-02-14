@@ -90,7 +90,7 @@ bool usbWriteStub(uint8_t* buffer) {
 }
 
 float lastDist = 0;
-float lastGas = 0;
+float lastGas = 3.0;
 float lastSpeed = 0;
 float temps = 0;
 float dataFreq = 100;
@@ -157,15 +157,15 @@ void loop() {
       }
     }
 
-    float temp = lastSpeed / 360;  //kph * 1000m / 60 min / 60 sec / 100 packets/s.
+    float temp = lastSpeed / 360000;  //kph / 60 min / 60 sec / 100 packets/s.
     lastDist = lastDist + temp;
     sendNumericalMessage(NUMERICAL_SIGNALS[3], lastSpeed, &listener); // FIXME, these should not be hardcoded
     sendNumericalMessage(NUMERICAL_SIGNALS[5], lastDist, &listener);
     sendNumericalMessage(NUMERICAL_SIGNALS[6], lastDist, &listener);
 
     //Gas is calculated with three constants that have no basis in experimentation or reality.
-#define IDLE_FUEL  0.00001   //Fuel spent just running the engine.
-#define SPEED_FUEL 0.0000000000005  //Fuel burned to fight air drag and road friction.
+#define IDLE_FUEL  0.00001   //Fuel spent running the engine and overcoming road friction.
+#define SPEED_FUEL 0.0000000000005  //Fuel burned to fight air drag.
 #define ACC_FUEL 0.0001    //Fuel burned to accelerate the car
 
     lastGas += IDLE_FUEL;
