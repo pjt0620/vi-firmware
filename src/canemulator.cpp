@@ -24,7 +24,6 @@ const char* NUMERICAL_SIGNALS[NUMERICAL_SIGNAL_COUNT] = {
     "vehicle_speed",
     "accelerator_pedal_position",
     "odometer",
-    "fine_odometer_since_restart",
     "latitude",
     "longitude",
     "fuel_level",
@@ -164,7 +163,6 @@ void loop() {
     lastDist = lastDist + temp;
     sendNumericalMessage(NUMERICAL_SIGNALS[3], lastSpeed, &listener); // FIXME, these should not be hardcoded
     sendNumericalMessage(NUMERICAL_SIGNALS[5], lastDist, &listener);
-    sendNumericalMessage(NUMERICAL_SIGNALS[6], lastDist, &listener);
 
     //Gas is calculated with three constants that have no basis in experimentation or reality.
 #define IDLE_FUEL  0.00001   //Fuel spent running the engine and overcoming road friction.
