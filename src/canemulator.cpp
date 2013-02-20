@@ -13,7 +13,11 @@
 #define EVENT_SIGNAL_COUNT 1
 #define EMULATOR_SEND_FREQUENCY 200
 
-int emulatorRateLimiter = 0;
+//Gas is calculated with three constants that have no basis in experimentation or reality.
+#define IDLE_FUEL  0.00001   //Fuel spent running the engine and overcoming road friction.
+#define SPEED_FUEL 0.0000000000005  //Fuel burned to fight air drag.
+#define ACC_FUEL 0.0001    //Fuel burned to accelerate the car
+#define ACCELERATION 0.2  //In kph per 100th of a second.
 
 extern Listener listener;
 
@@ -61,6 +65,14 @@ Event EVENT_SIGNAL_STATES[EVENT_SIGNAL_COUNT][3] = {
     { {"driver", false}, {"passenger", true}, {"rear_right", true}},
 };
 
+float lastDist = 0;
+float lastGas = 3.0;
+float lastSpeed = 0;
+float targetSpeed = 50;
+unsigned long timeAtEachSpeed = 7000;  //In milliseconds.
+unsigned long timeForSpeedChange;
+bool cruising = false;
+
 void carStop() {
   for (int i=0; i < NUMERICAL_SIGNAL_COUNT; i++) {
     sendNumericalMessage(NUMERICAL_SIGNALS[i], 0, &listener);
@@ -91,72 +103,58 @@ bool usbWriteStub(uint8_t* buffer) {
     return true;
 }
 
-float lastDist = 0;
-float lastGas = 3.0;
-float lastSpeed = 0;
-float temps = 0;
-float dataFreq = 100;
-float targetSpeed = 50;
-unsigned long timeAtEachSpeed = 7000;  //In milliseconds.
-unsigned long timeForSpeedChange;
-bool cruising = false;
-unsigned long nextUpdate = 1000;
-float acceleration = 0.2;  //In kph per 100th of a second.
-
 void setup() {
     srand(42);
     carStart();
 }
 
 void loop() {
-    while (millis() < nextUpdate) {}
+    delay(10);
 
-    nextUpdate += 10;
-
-    float signedAcceleration = acceleration;
+    float signedAcceleration = ACCELERATION;
     if (abs(lastSpeed - targetSpeed) <= 2.0) {
-      signedAcceleration = 0;
+        signedAcceleration = 0;
     } else if(targetSpeed < lastSpeed) {
-      signedAcceleration *= -1;
+        signedAcceleration *= -1;
     }
 
     lastSpeed = lastSpeed + signedAcceleration;
 
     if (cruising) {
-      //We're cruising at targetSpeed.
-      if (millis() > timeForSpeedChange) {
-        //We've cruised at this speed long enough.  Time to change it up.
-        cruising = false;
-        targetSpeed += 30;
-        if(targetSpeed > 130) {
-          targetSpeed = 50;
+        //We're cruising at targetSpeed.
+        if (millis() > timeForSpeedChange) {
+            //We've cruised at this speed long enough.  Time to change it up.
+            cruising = false;
+            targetSpeed += 30;
+            if(targetSpeed > 130) {
+                targetSpeed = 50;
+            }
+            /*
+               int newSpeed = random(3);
+               switch(newSpeed) {
+               case 0:
+               targetSpeed = 50;  //A little more than 30mph.
+               break;
+               case 1:
+               targetSpeed = 80;  //50mph.
+               break;
+               case 2:
+               targetSpeed = 120;  //75mph.
+               break;
+               default:
+            //Shouldn't've gotten here.  Hrm.
+            targetSpeed = 144;  //90mph.
+            break;
+            }
+            */
         }
-        /*
-        int newSpeed = random(3);
-        switch(newSpeed) {
-        case 0:
-          targetSpeed = 50;  //A little more than 30mph.
-          break;
-        case 1:
-          targetSpeed = 80;  //50mph.
-          break;
-        case 2:
-          targetSpeed = 120;  //75mph.
-          break;
-        default:
-          //Shouldn't've gotten here.  Hrm.
-          targetSpeed = 144;  //90mph.
-          break;
-        }
-        */
-      }
     } else {
-      //We haven't reached targetSpeed.
-      if (abs(lastSpeed - targetSpeed) <= 2.0) {
-        //We've reached targetSpeed!
-        timeForSpeedChange = millis() + timeAtEachSpeed;
-        cruising = true;
-      }
+        //We haven't reached targetSpeed.
+        if (abs(lastSpeed - targetSpeed) <= 2.0) {
+            //We've reached targetSpeed!
+            timeForSpeedChange = millis() + timeAtEachSpeed;
+            cruising = true;
+        }
     }
 
     float temp = lastSpeed / 360000;  //kph / 60 min / 60 sec / 100 packets/s.
@@ -164,37 +162,15 @@ void loop() {
     sendNumericalMessage(NUMERICAL_SIGNALS[3], lastSpeed, &listener); // FIXME, these should not be hardcoded
     sendNumericalMessage(NUMERICAL_SIGNALS[5], lastDist, &listener);
 
-    //Gas is calculated with three constants that have no basis in experimentation or reality.
-#define IDLE_FUEL  0.00001   //Fuel spent running the engine and overcoming road friction.
-#define SPEED_FUEL 0.0000000000005  //Fuel burned to fight air drag.
-#define ACC_FUEL 0.0001    //Fuel burned to accelerate the car
-
     lastGas += IDLE_FUEL;
     if (signedAcceleration > -0.01) {
-      lastGas += SPEED_FUEL * lastSpeed * lastSpeed * lastSpeed * lastSpeed;  //We're fighting drag
-      if (signedAcceleration > 0.1) {
-        lastGas += ACC_FUEL;  //And we're adding momentum to the car.
-      }
+        lastGas += SPEED_FUEL * lastSpeed * lastSpeed * lastSpeed * lastSpeed;  //We're fighting drag
+        if (signedAcceleration > 0.1) {
+            lastGas += ACC_FUEL;  //And we're adding momentum to the car.
+        }
     }
 
-    sendNumericalMessage(NUMERICAL_SIGNALS[10], lastGas, &listener);
-
-    long randomNumerical;
-    do {
-      randomNumerical =  random(NUMERICAL_SIGNAL_COUNT);
-    } while ((randomNumerical == 3) || (randomNumerical == 5) ||
-             (randomNumerical == 6) || (randomNumerical == 10));
-
-    sendNumericalMessage(
-                         NUMERICAL_SIGNALS[randomNumerical],
-                         rand() % 50 + rand() % 100 * .1, &listener);
-    sendBooleanMessage(BOOLEAN_SIGNALS[rand() % BOOLEAN_SIGNAL_COUNT],
-                       rand() % 2 == 1 ? true : false, &listener);
-
-    int eventSignalIndex = rand() % EVENT_SIGNAL_COUNT;
-    Event randomEvent = EVENT_SIGNAL_STATES[eventSignalIndex][rand() % 3];
-    sendEventedBooleanMessage(EVENT_SIGNALS[eventSignalIndex],
-                              randomEvent.value, randomEvent.event, &listener);
+    sendNumericalMessage(NUMERICAL_SIGNALS[9], lastGas, &listener);
 
     readFromHost(listener.usb, usbWriteStub);
     readFromSerial(listener.serial, usbWriteStub);
