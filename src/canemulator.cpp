@@ -7,7 +7,7 @@
 #include "log.h"
 #include <stdlib.h>
 
-#define NUMERICAL_SIGNAL_COUNT 11
+#define NUMERICAL_SIGNAL_COUNT 10
 #define BOOLEAN_SIGNAL_COUNT 5
 #define STATE_SIGNAL_COUNT 2
 #define EVENT_SIGNAL_COUNT 1
@@ -171,6 +171,23 @@ void loop() {
     }
 
     sendNumericalMessage(NUMERICAL_SIGNALS[9], lastGas, &listener);
+
+    long randomNumerical;
+    do {
+        randomNumerical =  random(NUMERICAL_SIGNAL_COUNT);
+    } while ((randomNumerical == 3) || (randomNumerical == 5) ||
+            (randomNumerical == 6) || (randomNumerical == 9));
+
+    sendNumericalMessage(
+            NUMERICAL_SIGNALS[randomNumerical],
+            rand() % 50 + rand() % 100 * .1, &listener);
+    sendBooleanMessage(BOOLEAN_SIGNALS[rand() % BOOLEAN_SIGNAL_COUNT],
+            rand() % 2 == 1 ? true : false, &listener);
+
+    int eventSignalIndex = rand() % EVENT_SIGNAL_COUNT;
+    Event randomEvent = EVENT_SIGNAL_STATES[eventSignalIndex][rand() % 3];
+    sendEventedBooleanMessage(EVENT_SIGNALS[eventSignalIndex],
+            randomEvent.value, randomEvent.event, &listener);
 
     readFromHost(listener.usb, usbWriteStub);
     readFromSerial(listener.serial, usbWriteStub);
