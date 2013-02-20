@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-import logging
 import argparse
-import struct
 import json
 from xml.etree.ElementTree import parse
 
@@ -21,7 +19,8 @@ class Network(object):
             self._parse_node(node, all_messages)
 
     def to_dict(self):
-        return {self.address: {"messages": dict((message.id, message.to_dict())
+        return {self.address: {"messages": dict(("0x%x" % message.id,
+                    message.to_dict())
                 for message in list(self.messages.values())
                 if len(message.signals) > 0)}}
 
@@ -42,13 +41,15 @@ class Message(object):
         self.name = node.find("Name").text
         self.id = int(node.find("ID").text, 0)
 
-        for signal_node in node.findall("Signal"):
-            signal = Signal.from_xml_node(signal_node)
-            for message in all_messages:
-                for candidate in message.signals:
-                    if candidate.name == signal.name:
-                        signal.generic_name = candidate.generic_name
-                        self.signals.append(signal)
+        for message in all_messages:
+            if message.id == self.id:
+                signals = (Signal.from_xml_node(signal_node)
+                        for signal_node in node.findall("Signal"))
+                for signal in signals:
+                    for candidate in message.signals:
+                        if candidate.name == signal.name:
+                            signal.generic_name = candidate.generic_name
+                            self.signals.append(signal)
 
     def to_dict(self):
         return {"name": self.name,
@@ -59,9 +60,8 @@ class Message(object):
 def parse_options(argv):
     parser = argparse.ArgumentParser(
             description="Convert Canoe XML to the OpenXC JSON format.")
-    parser.add_argument("xml", default="c346_hs_mapping.txt",
-            help="Name of Canoe XML file")
-    parser.add_argument("mapping_filename", default="hs.json",
+    parser.add_argument("xml", help="Name of Canoe XML file")
+    parser.add_argument("mapping_filename",
             help="Path to a JSON file with CAN messages mapped to OpenXC names")
     parser.add_argument("out", default="dump.json",
             help="Name out output JSON file")

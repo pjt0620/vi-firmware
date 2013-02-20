@@ -1,15 +1,24 @@
 #include "shared_handlers.h"
 #include "canwrite.h"
+#include "log.h"
 
 float rotationsSinceRestart = 0;
-float odometerSinceRestart = 0;
+float rollingOdometerSinceRestart = 0;
+float totalOdometerAtRestart = 0;
 float fuelConsumedSinceRestartLiters = 0;
 
 void sendDoorStatus(const char* doorId, uint64_t data, CanSignal* signal,
         CanSignal* signals, int signalCount, Listener* listener) {
+    if(signal == NULL) {
+        debug("Specific door signal for ID %s is NULL, vehicle may not support",
+                doorId);
+        return;
+    }
+
     float rawAjarStatus = decodeCanSignal(signal, data);
     bool send = true;
-    bool ajarStatus = booleanHandler(NULL, signals, signalCount, rawAjarStatus, &send);
+    bool ajarStatus = booleanHandler(NULL, signals, signalCount, rawAjarStatus,
+            &send);
 
     if(send && (signal->sendSame || !signal->received ||
                 rawAjarStatus != signal->lastValue)) {
@@ -20,27 +29,61 @@ void sendDoorStatus(const char* doorId, uint64_t data, CanSignal* signal,
     signal->lastValue = rawAjarStatus;
 }
 
-float handleRollingOdometer(CanSignal* signal, CanSignal* signals,
-       int signalCount, float value, bool* send) {
-    if(value < signal->lastValue) {
-        odometerSinceRestart +=
-                signal->maxValue - signal->lastValue + value;
-    } else {
-        odometerSinceRestart += value - signal->lastValue;
+void handleDoorStatusMessage(int messageId, uint64_t data, CanSignal* signals,
+        int signalCount, Listener* listener) {
+    sendDoorStatus("driver", data,
+            lookupSignal("driver_door", signals, signalCount),
+            signals, signalCount, listener);
+    sendDoorStatus("passenger", data,
+            lookupSignal("passenger_door", signals, signalCount),
+            signals, signalCount, listener);
+    sendDoorStatus("rear_right", data,
+            lookupSignal("rear_right_door", signals, signalCount),
+            signals, signalCount, listener);
+    sendDoorStatus("rear_left", data,
+            lookupSignal("rear_left_door", signals, signalCount),
+            signals, signalCount, listener);
+}
+
+float firstReceivedOdometerValue(CanSignal* signals, int signalCount) {
+    if(totalOdometerAtRestart == 0) {
+        CanSignal* odometerSignal = lookupSignal("total_odometer", signals,
+                signalCount);
+        if(odometerSignal != NULL && odometerSignal->received) {
+            totalOdometerAtRestart = odometerSignal->lastValue;
+        }
     }
-    return odometerSinceRestart;
+    return totalOdometerAtRestart;
+}
+
+float handleRollingOdometer(CanSignal* signal, CanSignal* signals,
+       int signalCount, float value, bool* send, float factor) {
+    if(value < signal->lastValue) {
+        rollingOdometerSinceRestart += signal->maxValue - signal->lastValue
+            + value;
+    } else {
+        rollingOdometerSinceRestart += value - signal->lastValue;
+    }
+
+    return firstReceivedOdometerValue(signals, signalCount) +
+        (factor * rollingOdometerSinceRestart);
+}
+
+float handleRollingOdometerKilometers(CanSignal* signal, CanSignal* signals,
+       int signalCount, float value, bool* send) {
+    return handleRollingOdometer(signal, signals, signalCount, value, send, 1);
 }
 
 float handleRollingOdometerMiles(CanSignal* signal, CanSignal* signals,
        int signalCount, float value, bool* send) {
-    return KM_PER_MILE * handleRollingOdometer(signal, signals, signalCount,
-            value, send);
+    return handleRollingOdometer(signal, signals, signalCount, value, send,
+            KM_PER_MILE);
 }
 
 float handleRollingOdometerMeters(CanSignal* signal, CanSignal* signals,
        int signalCount, float value, bool* send) {
-    return KM_PER_M * handleRollingOdometer(signal, signals, signalCount, value,
-            send);
+    return handleRollingOdometer(signal, signals, signalCount, value, send,
+            KM_PER_M);
 }
 
 bool handleStrictBoolean(CanSignal* signal, CanSignal* signals, int signalCount,
@@ -54,22 +97,22 @@ bool handleStrictBoolean(CanSignal* signal, CanSignal* signals, int signalCount,
 float handleFuelFlow(CanSignal* signal, CanSignal* signals, int signalCount,
         float value, bool* send, float multiplier) {
     if(value < signal->lastValue) {
-        value += signal->maxValue - signal->lastValue + value;
+        value = signal->maxValue - signal->lastValue + value;
     } else {
-        value += value - signal->lastValue;
+        value = value - signal->lastValue;
     }
     fuelConsumedSinceRestartLiters += multiplier * value;
     return fuelConsumedSinceRestartLiters;
 }
 
-float handleFuelFlowGallons(CanSignal* signal, CanSignal* signals, int signalCount,
-        float value, bool* send) {
+float handleFuelFlowGallons(CanSignal* signal, CanSignal* signals,
+        int signalCount, float value, bool* send) {
     return handleFuelFlow(signal, signals, signalCount, value, send,
             LITERS_PER_GALLON);
 }
 
-float handleFuelFlowMicroliters(CanSignal* signal, CanSignal* signals, int signalCount,
-        float value, bool* send) {
+float handleFuelFlowMicroliters(CanSignal* signal, CanSignal* signals,
+        int signalCount, float value, bool* send) {
     return handleFuelFlow(signal, signals, signalCount, value, send,
             LITERS_PER_UL);
 }
@@ -122,9 +165,14 @@ float handleUnsignedSteeringWheelAngle(CanSignal* signal,
     CanSignal* steeringAngleSign = lookupSignal("steering_wheel_angle_sign",
             signals, signalCount);
 
-    if(steeringAngleSign->lastValue == 0) {
-        // left turn
-        value *= -1;
+    if(steeringAngleSign == NULL) {
+        debug("Unable to find stering wheel angle sign signal");
+        *send = false;
+    } else {
+        if(steeringAngleSign->lastValue == 0) {
+            // left turn
+            value *= -1;
+        }
     }
     return value;
 }
@@ -136,7 +184,8 @@ float handleMultisizeWheelRotationCount(CanSignal* signal, CanSignal* signals,
     } else {
         rotationsSinceRestart += value - signal->lastValue;
     }
-    return 2 * PI * wheelRadius * rotationsSinceRestart;
+    return firstReceivedOdometerValue(signals, signalCount) + (2 * PI *
+            wheelRadius * rotationsSinceRestart);
 }
 
 void handleButtonEventMessage(int messageId, uint64_t data,
@@ -146,23 +195,37 @@ void handleButtonEventMessage(int messageId, uint64_t data,
     CanSignal* buttonStateSignal = lookupSignal("button_state", signals,
             signalCount);
 
+    if(buttonTypeSignal == NULL || buttonStateSignal == NULL) {
+        debug("Unable to find button type and state signals");
+        return;
+    }
+
     float rawButtonType = decodeCanSignal(buttonTypeSignal, data);
     float rawButtonState = decodeCanSignal(buttonStateSignal, data);
 
     bool send = true;
-    const char* buttonType = stateHandler(buttonTypeSignal, signals, signalCount,
-            rawButtonType, &send);
-    const char* buttonState = stateHandler(buttonStateSignal, signals, signalCount,
-            rawButtonState, &send);
-
-    if(send) {
-        sendEventedBooleanMessage(BUTTON_EVENT_GENERIC_NAME, buttonType,
-                buttonState, listener);
+    const char* buttonType = stateHandler(buttonTypeSignal, signals,
+            signalCount, rawButtonType, &send);
+    if(!send || buttonType == NULL) {
+        debug("Unable to find button type corresponding to %f",
+                rawButtonType);
+        return;
     }
+
+    const char* buttonState = stateHandler(buttonStateSignal, signals,
+            signalCount, rawButtonState, &send);
+    if(!send || buttonState == NULL) {
+        debug("Unable to find button state corresponding to %f",
+                rawButtonState);
+        return;
+    }
+
+    sendEventedStringMessage(BUTTON_EVENT_GENERIC_NAME, buttonType,
+            buttonState, listener);
 }
 
-bool handleTurnSignalCommand(const char* name, cJSON* value, CanSignal* signals,
-        int signalCount) {
+bool handleTurnSignalCommand(const char* name, cJSON* value, cJSON* event,
+        CanSignal* signals, int signalCount) {
     const char* direction = value->valuestring;
     CanSignal* signal = NULL;
     if(!strcmp("left", direction)) {
@@ -173,7 +236,9 @@ bool handleTurnSignalCommand(const char* name, cJSON* value, CanSignal* signals,
 
     if(signal != NULL) {
         return sendCanSignal(signal, cJSON_CreateBool(true), booleanWriter,
-                signals, signalCount);
+                signals, signalCount, true);
+    } else {
+        debug("Unable to find signal for %s turn signal", direction);
     }
     return false;
 }

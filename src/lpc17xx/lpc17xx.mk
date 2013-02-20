@@ -1,4 +1,9 @@
-GCC_BIN =
+GCC_ARM_ON_PATH = $(shell command -v arm-none-eabi-gcc >/dev/null; echo $$?)
+
+ifneq ($(GCC_ARM_ON_PATH),0)
+GCC_BIN = ../dependencies/gcc-arm-embedded/bin/
+endif
+
 OBJDIR = build/lpc17xx
 TARGET = $(BASE_TARGET)-lpc17xx
 CMSIS_PATH = ./libs/CDL/CMSISv2p00_LPC17xx
@@ -54,9 +59,7 @@ TARGET_ELF = $(OBJDIR)/$(TARGET).elf
 ifdef DEBUG
 CC_FLAGS += -g -ggdb
 else
-# TODO re-enable -O2 when we figure out why IsINReady() returns true
-# when the stream isn't completely read by the host, and thus leading to
-# corruption. See #770.
+CC_FLAGS += -Os -Wno-maybe-uninitialized
 endif
 
 BSP_EXISTS = $(shell test -e libs/BSP/bsp.h; echo $$?)
@@ -98,3 +101,6 @@ $(TARGET_ELF): $(OBJECTS)
 
 $(TARGET_BIN): $(TARGET_ELF)
 	$(OBJCOPY) -O binary $< $@
+
+ispflash: all
+	@lpc21isp -bin $(TARGET_BIN) $(SERIAL_PORT) 115200 1474

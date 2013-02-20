@@ -1,6 +1,5 @@
 #include <check.h>
 #include <stdint.h>
-#include "helpers.h"
 #include "canutil.h"
 #include "canwrite.h"
 #include "cJSON.h"
@@ -49,14 +48,13 @@ void setup() {
 START_TEST (test_number_writer)
 {
     bool send = true;
-    uint64_t value = numberWriter(&SIGNALS[0], SIGNALS,
-            SIGNAL_COUNT, cJSON_CreateNumber(0xa), &send);
-    check_equal_unit64(value, 0x1e00000000000000LLU);
+    uint64_t value = numberWriter(&SIGNALS[0], SIGNALS, SIGNAL_COUNT, 0xa,
+            &send);
+    ck_assert_int_eq(value, 0x1e00000000000000LLU);
     fail_unless(send);
 
-    value = numberWriter(&SIGNALS[1], SIGNALS, SIGNAL_COUNT,
-            cJSON_CreateNumber(0x6), &send);
-    check_equal_unit64(value, 0x6000000000000000LLU);
+    value = numberWriter(&SIGNALS[1], SIGNALS, SIGNAL_COUNT, 0x6, &send);
+    ck_assert_int_eq(value, 0x6000000000000000LLU);
     fail_unless(send);
 }
 END_TEST
@@ -64,14 +62,13 @@ END_TEST
 START_TEST (test_boolean_writer)
 {
     bool send = true;
-    uint64_t value = booleanWriter(&SIGNALS[2], SIGNALS, SIGNAL_COUNT,
-            cJSON_CreateBool(true), &send);
-    check_equal_unit64(value, 0x8000000000000000LLU);
+    uint64_t value = booleanWriter(&SIGNALS[2], SIGNALS, SIGNAL_COUNT, true,
+            &send);
+    ck_assert_int_eq(value, 0x8000000000000000LLU);
     fail_unless(send);
 
-    value = booleanWriter(&SIGNALS[2], SIGNALS, SIGNAL_COUNT,
-            cJSON_CreateBool(false), &send);
-    check_equal_unit64(value, 0x0000000000000000LLU);
+    value = booleanWriter(&SIGNALS[2], SIGNALS, SIGNAL_COUNT, false, &send);
+    ck_assert_int_eq(value, 0x0000000000000000LLU);
     fail_unless(send);
 }
 END_TEST
@@ -81,7 +78,7 @@ START_TEST (test_state_writer)
     bool send = true;
     uint64_t value = stateWriter(&SIGNALS[1], SIGNALS, SIGNAL_COUNT,
             cJSON_CreateString(SIGNAL_STATES[0][1].name), &send);
-    check_equal_unit64(value, 0x2000000000000000LLU);
+    ck_assert_int_eq(value, 0x2000000000000000LLU);
     fail_unless(send);
 }
 END_TEST
@@ -104,8 +101,7 @@ START_TEST (test_write_not_allowed)
 {
     bool send = true;
     SIGNALS[1].writable = false;
-    numberWriter(&SIGNALS[1], SIGNALS, SIGNAL_COUNT, cJSON_CreateNumber(0x6),
-            &send);
+    numberWriter(&SIGNALS[1], SIGNALS, SIGNAL_COUNT, 0x6, &send);
     fail_if(send);
 }
 END_TEST
@@ -122,14 +118,14 @@ END_TEST
 START_TEST (test_encode_can_signal)
 {
     uint64_t value = encodeCanSignal(&SIGNALS[1], 0);
-    check_equal_unit64(value, 0);
+    ck_assert_int_eq(value, 0);
 }
 END_TEST
 
 START_TEST (test_encode_can_signal_rounding_precision)
 {
     uint64_t value = encodeCanSignal(&SIGNALS[3], 50);
-    check_equal_unit64(value, 0x061a800000000000LLU);
+    ck_assert_int_eq(value, 0x061a800000000000LLU);
 }
 END_TEST
 
@@ -148,7 +144,7 @@ START_TEST (test_swaps_byte_order)
     enqueueCanMessage(&message, 0x123456);
 
     CanMessage queuedMessage = QUEUE_POP(CanMessage, &message.bus->sendQueue);
-    ck_assert_int_eq(queuedMessage.data, 0x5634120000000000);
+    ck_assert_int_eq(queuedMessage.data, 0x5634120000000000LLU);
 }
 END_TEST
 
@@ -180,7 +176,6 @@ START_TEST (test_send_with_custom_with_states)
 }
 END_TEST
 
-
 uint64_t customStateWriter(CanSignal* signal, CanSignal* signals,
         int signalCount, cJSON* value, bool* send) {
     *send = false;
@@ -193,6 +188,15 @@ START_TEST (test_send_with_custom_says_no_send)
                 cJSON_CreateString(SIGNAL_STATES[0][1].name), customStateWriter,
                 SIGNALS, SIGNAL_COUNT));
     fail_unless(QUEUE_EMPTY(CanMessage, &SIGNALS[1].message->bus->sendQueue));
+}
+END_TEST
+
+START_TEST (test_force_send)
+{
+    fail_if(sendCanSignal(&SIGNALS[1],
+                cJSON_CreateString(SIGNAL_STATES[0][1].name), customStateWriter,
+                SIGNALS, SIGNAL_COUNT, true));
+    ck_assert_int_eq(1, QUEUE_LENGTH(CanMessage, &SIGNALS[1].message->bus->sendQueue));
 }
 END_TEST
 
@@ -263,6 +267,7 @@ Suite* canwriteSuite(void) {
     tcase_add_test(tc_enqueue, test_send_with_null_writer);
     tcase_add_test(tc_enqueue, test_send_with_custom_with_states);
     tcase_add_test(tc_enqueue, test_send_with_custom_says_no_send);
+    tcase_add_test(tc_enqueue, test_force_send);
     suite_add_tcase(s, tc_enqueue);
 
     TCase *tc_write = tcase_create("write");

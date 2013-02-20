@@ -3,6 +3,7 @@
 #include "log.h"
 
 #define USB_PACKET_SIZE 64
+#define USB_VBUS_ANALOG_INPUT A0
 
 extern "C" {
 extern bool handleControlRequest(uint8_t);
@@ -19,7 +20,7 @@ boolean usbCallback(USB_EVENT event, void *pdata, word size) {
 
     switch(event) {
     case EVENT_CONFIGURED:
-        debug("USB Configured\r\n");
+        debug("USB Configured");
         USB_DEVICE.configured = true;
         USB_DEVICE.device.EnableEndpoint(USB_DEVICE.inEndpoint,
                 USB_IN_ENABLED|USB_HANDSHAKE_ENABLED|USB_DISALLOW_SETUP);
@@ -42,13 +43,14 @@ void sendControlMessage(uint8_t* data, uint8_t length) {
 
 bool waitForHandle(UsbDevice* usbDevice) {
     int i = 0;
-    while(usbDevice->device.HandleBusy(usbDevice->deviceToHostHandle)) {
+    while(usbDevice->configured &&
+            usbDevice->device.HandleBusy(usbDevice->deviceToHostHandle)) {
         ++i;
         if(i > 800) {
             // This can get really noisy when running but I want to leave it in
             // because it' useful to enable when debugging.
             // debug("USB most likely not connected or at least not requesting "
-                    // "IN transfers - bailing out of handle waiting\r\n");
+                    // "IN transfers - bailing out of handle waiting");
             return false;
         }
     }
@@ -56,6 +58,14 @@ bool waitForHandle(UsbDevice* usbDevice) {
 }
 
 void processUsbSendQueue(UsbDevice* usbDevice) {
+    if(usbDevice->configured && analogRead(USB_VBUS_ANALOG_INPUT) < 100) {
+        // if there's nothing attached to the analog input it floats at ~828, so
+        // if we're powering the board from micro-USB (and the jumper is going
+        // to 5v and not the analog input), this is still OK.
+        debug("USB no longer detected - marking unconfigured");
+        usbDevice->configured = false;
+    }
+
     while(usbDevice->configured &&
             !QUEUE_EMPTY(uint8_t, &usbDevice->sendQueue)) {
         // Make sure the USB write is 100% complete before messing with this buffer
@@ -88,9 +98,19 @@ void initializeUsb(UsbDevice* usbDevice) {
     initializeUsbCommon(usbDevice);
     usbDevice->device = USBDevice(usbCallback);
     usbDevice->device.InitializeSystem(false);
-    debug("Done.\r\n");
+    pinMode(USB_VBUS_ANALOG_INPUT, INPUT);
+    debug("Done.");
 }
 
+
+/* Private: Arm the given endpoint for a read from the device to host.
+ *
+ * This also puts a NUL char in the beginning of the buffer so you don't get
+ * confused that it's still a valid message.
+ *
+ * device - the CAN USB device to arm the endpoint on
+ * buffer - the destination buffer for the next OUT transfer.
+ */
 void armForRead(UsbDevice* usbDevice, char* buffer) {
     buffer[0] = 0;
     usbDevice->hostToDeviceHandle = usbDevice->device.GenRead(
@@ -103,7 +123,7 @@ void readFromHost(UsbDevice* usbDevice, bool (*callback)(uint8_t*)) {
             for(int i = 0; i < usbDevice->outEndpointSize; i++) {
                 if(!QUEUE_PUSH(uint8_t, &usbDevice->receiveQueue,
                             usbDevice->receiveBuffer[i])) {
-                    debug("Dropped write from host -- queue is full\r\n");
+                    debug("Dropped write from host -- queue is full");
                 }
             }
             processQueue(&usbDevice->receiveQueue, callback);

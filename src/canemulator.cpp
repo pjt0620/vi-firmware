@@ -11,6 +11,9 @@
 #define BOOLEAN_SIGNAL_COUNT 5
 #define STATE_SIGNAL_COUNT 2
 #define EVENT_SIGNAL_COUNT 1
+#define EMULATOR_SEND_FREQUENCY 200
+
+int emulatorRateLimiter = 0;
 
 extern Listener listener;
 
@@ -85,7 +88,7 @@ void carStart() {
 }
 
 bool usbWriteStub(uint8_t* buffer) {
-    debug("Ignoring write request -- running an emulator\r\n");
+    debug("Ignoring write request -- running an emulator");
     return true;
 }
 
@@ -181,7 +184,7 @@ void loop() {
     long randomNumerical;
     do {
       randomNumerical =  random(NUMERICAL_SIGNAL_COUNT);
-    } while ((randomNumerical == 3) || (randomNumerical == 5) || 
+    } while ((randomNumerical == 3) || (randomNumerical == 5) ||
              (randomNumerical == 6) || (randomNumerical == 10));
 
     sendNumericalMessage(

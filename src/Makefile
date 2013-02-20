@@ -1,7 +1,11 @@
 SYMBOLS =
 
+GREEN="$${txtbld}$$(tput setaf 2)"
+COLOR_RESET=$$(tput sgr0)
+
 BASE_TARGET = cantranslator
 OBJDIR_ROOT = build
+DEPENDENCIES_FOLDER = ../dependencies
 OBJDIR = $(OBJDIR_ROOT)
 
 ifdef DEBUG
@@ -22,7 +26,7 @@ CC_SYMBOLS = $(addprefix -D,$(SYMBOLS))
 
 CJSON_EXISTS = $(shell test -e libs/cJSON/cJSON.h; echo $$?)
 ifneq ($(CJSON_EXISTS),0)
-$(error cJSON dependency is missing - did you run "git submodule init && git submodule update"?)
+$(error cJSON dependency is missing - run "script/bootstrap.sh")
 endif
 
 # Valid PLATFORM options:
@@ -41,12 +45,20 @@ endif
 
 include tests/tests.mk
 
+transmitter: SYMBOLS += TRANSMITTER
+transmitter: custom_all
+
 emulator: SYMBOLS += CAN_EMULATOR
 emulator: BASE_TARGET = canemulator
-emulator: all
+emulator: custom_all
 
-transmitter: SYMBOLS += TRANSMITTER
-transmitter: all
+.DEFAULT_GOAL = custom_all
+
+custom_all_prefix:
+	@echo "Compiling..."
+
+custom_all: custom_all_prefix all
+	@echo "$(GREEN)Compiled successfully.$(COLOR_RESET)"
 
 clean::
 	rm -rf $(OBJDIR_ROOT)/*

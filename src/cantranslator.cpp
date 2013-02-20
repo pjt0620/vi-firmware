@@ -8,8 +8,11 @@
 #include "log.h"
 #include "cJSON.h"
 #include "listener.h"
+#include "timer.h"
 #include <stdint.h>
 #include <stdlib.h>
+
+#define CAN_ACTIVE_TIMEOUT_S 5
 
 extern Listener listener;
 
@@ -29,11 +32,20 @@ void loop() {
     }
 
     readFromHost(listener.usb, &receiveWriteRequest);
+    // TODO err, shouldn't this have a &?
     readFromSerial(listener.serial, receiveWriteRequest);
     readFromSocket(listener.ethernet, &receiveWriteRequest);
 
     for(int i = 0; i < getCanBusCount(); i++) {
         processCanWriteQueue(&getCanBuses()[i]);
+    }
+
+    bool canBusActive = false;
+    for(int i = 0; i < getCanBusCount(); i++) {
+        if(systemTimeMs() - getCanBuses()[i].lastMessageReceived <
+                CAN_ACTIVE_TIMEOUT_S * 1000) {
+            canBusActive = true;
+        }
     }
 }
 
@@ -47,7 +59,7 @@ void receiveRawWriteRequest(cJSON* idObject, cJSON* root) {
     uint32_t id = idObject->valueint;
     cJSON* dataObject = cJSON_GetObjectItem(root, "data");
     if(dataObject == NULL) {
-        debug("Raw write request missing data\r\n", id);
+        debug("Raw write request missing data", id);
         return;
     }
 
@@ -56,32 +68,6 @@ void receiveRawWriteRequest(cJSON* idObject, cJSON* root) {
     // TODO hard coding bus 0 right now, but it should support sending on either
     CanMessage message = {&getCanBuses()[0], id};
     enqueueCanMessage(&message, strtoull(dataString, &end, 16));
-}
-
-/* The binary format handled by this function is as follows:
- *
- * A leading '{' followed by a 4 byte message ID, then a '|' separator and
- * finally 8 bytes of data and a trailing '}'. E.g.:
- *
- * {<4 byte ID>|<8 bytes of data>}
- */
-void receiveBinaryWriteRequest(uint8_t* message) {
-    const int BINARY_CAN_WRITE_PACKET_LENGTH = 15;
-    if(message[0] != '{' || message[5] != '|' || message[14] != '}') {
-        debug("Received a corrupted CAN message: ");
-        for(int i = 0; i <= BINARY_CAN_WRITE_PACKET_LENGTH; i++) {
-            debug("%02x ", message[i] );
-        }
-        debug("\r\n");
-        return;
-    }
-
-    CanMessage outgoing = {0, 0};
-    memcpy((uint8_t*)&outgoing.id, &message[1], 4);
-    for(int i = 0; i < 8; i++) {
-        ((uint8_t*)&(outgoing.data))[i] = message[i + 6];
-    }
-    QUEUE_PUSH(CanMessage, &getCanBuses()[0].sendQueue, outgoing);
 }
 
 void receiveTranslatedWriteRequest(cJSON* nameObject, cJSON* root) {
@@ -93,21 +79,25 @@ void receiveTranslatedWriteRequest(cJSON* nameObject, cJSON* root) {
 
     CanSignal* signal = lookupSignal(name, getSignals(), getSignalCount(),
             true);
-    CanCommand* command = lookupCommand(name, getCommands(), getCommandCount());
     if(signal != NULL) {
         if(value == NULL) {
-            debug("Write request for %s missing value\r\n", name);
+            debug("Write request for %s missing value", name);
             return;
         }
         sendCanSignal(signal, value, getSignals(), getSignalCount());
-    } else if(command != NULL) {
-        command->handler(name, value, event, getSignals(), getSignalCount());
     } else {
-        debug("Writing not allowed for signal with name %s\r\n", name);
+        CanCommand* command = lookupCommand(name, getCommands(),
+                getCommandCount());
+        if(command != NULL) {
+            command->handler(name, value, event, getSignals(),
+                    getSignalCount());
+        } else {
+            debug("Writing not allowed for signal with name %s", name);
+        }
     }
 }
 
-bool receiveJsonWriteRequest(uint8_t* message) {
+bool receiveWriteRequest(uint8_t* message) {
     cJSON *root = cJSON_Parse((char*)message);
     bool foundMessage = false;
     if(root != NULL) {
@@ -117,7 +107,7 @@ bool receiveJsonWriteRequest(uint8_t* message) {
             cJSON* idObject = cJSON_GetObjectItem(root, "id");
             if(idObject == NULL) {
                 debug("Write request is malformed, "
-                        "missing name or id: %s\r\n", message);
+                        "missing name or id: %s", message);
             } else {
                 receiveRawWriteRequest(idObject, root);
             }
@@ -127,18 +117,9 @@ bool receiveJsonWriteRequest(uint8_t* message) {
         cJSON_Delete(root);
     } else {
         debug("No valid JSON in incoming buffer yet -- "
-                "if it's valid, may be out of memory\r\n");
+                "if it's valid, may be out of memory");
     }
     return foundMessage;
-}
-
-bool receiveWriteRequest(uint8_t* message) {
-#ifdef TRANSMITTER
-    receiveBinaryWriteRequest(message);
-    return true;
-#else
-    return receiveJsonWriteRequest(message);
-#endif
 }
 
 /*
@@ -149,7 +130,8 @@ void receiveCan(CanBus* bus) {
     // TODO what happens if we process until the queue is empty?
     if(!QUEUE_EMPTY(CanMessage, &bus->receiveQueue)) {
         CanMessage message = QUEUE_POP(CanMessage, &bus->receiveQueue);
-        decodeCanMessage(message.id, message.data);
+        decodeCanMessage(bus, message.id, message.data);
+        bus->lastMessageReceived = systemTimeMs();
     }
 }
 

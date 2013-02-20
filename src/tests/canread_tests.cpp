@@ -60,7 +60,7 @@ END_TEST
 START_TEST (test_passthrough_handler)
 {
     bool send = true;
-    fail_unless(passthroughHandler(&SIGNALS[0], SIGNALS, SIGNAL_COUNT, 42.0, &send) == 42.0);
+    ck_assert_int_eq(passthroughHandler(&SIGNALS[0], SIGNALS, SIGNAL_COUNT, 42.0, &send), 42.0);
     fail_unless(send);
 }
 END_TEST
@@ -72,7 +72,7 @@ START_TEST (test_boolean_handler)
     fail_unless(send);
     fail_unless(booleanHandler(&SIGNALS[0], SIGNALS, SIGNAL_COUNT, 0.5, &send));
     fail_unless(send);
-    fail_unless(!booleanHandler(&SIGNALS[0], SIGNALS, SIGNAL_COUNT, 0, &send));
+    fail_if(booleanHandler(&SIGNALS[0], SIGNALS, SIGNAL_COUNT, 0, &send));
     fail_unless(send);
 }
 END_TEST
@@ -81,18 +81,18 @@ START_TEST (test_ignore_handler)
 {
     bool send = true;
     ignoreHandler(&SIGNALS[0], SIGNALS, 2, 1.0, &send);
-    fail_unless(!send);
+    fail_if(send);
 }
 END_TEST
 
 START_TEST (test_state_handler)
 {
     bool send = true;
-    fail_unless(strcmp(stateHandler(&SIGNALS[1], SIGNALS, 2, 2, &send),
-            SIGNAL_STATES[0][1].name) == 0);
+    ck_assert_str_eq(stateHandler(&SIGNALS[1], SIGNALS, 2, 2, &send),
+            SIGNAL_STATES[0][1].name);
     fail_unless(send);
     stateHandler(&SIGNALS[1], SIGNALS, 2, 42, &send);
-    fail_unless(!send);
+    fail_if(send);
 }
 END_TEST
 
@@ -178,7 +178,7 @@ END_TEST
 START_TEST (test_passthrough_message)
 {
     fail_unless(QUEUE_EMPTY(uint8_t, &listener.usb->sendQueue));
-    passthroughCanMessage(&listener, 42, 0x123456789ABCDEF1);
+    passthroughCanMessage(&listener, 42, 0x123456789ABCDEF1LLU);
     fail_if(QUEUE_EMPTY(uint8_t, &listener.usb->sendQueue));
 
     uint8_t snapshot[QUEUE_LENGTH(uint8_t, &listener.usb->sendQueue) + 1];
@@ -202,6 +202,34 @@ START_TEST (test_default_handler)
     QUEUE_SNAPSHOT(uint8_t, &listener.usb->sendQueue, snapshot);
     snapshot[sizeof(snapshot) - 1] = NULL;
     ck_assert_str_eq((char*)snapshot, "{\"name\":\"torque_at_transmission\",\"value\":-19990}\r\n");
+}
+END_TEST
+
+const char* noSendStringHandler(CanSignal* signal, CanSignal* signals,
+        int signalCount, float value, bool* send) {
+    *send = false;
+    return NULL;
+}
+
+bool noSendBooleanTranslateHandler(CanSignal* signal, CanSignal* signals,
+        int signalCount, float value, bool* send) {
+    *send = false;
+    return false;
+}
+
+START_TEST (test_translate_respects_send_value)
+{
+    translateCanSignal(&listener, &SIGNALS[0], 0xEB, ignoreHandler, SIGNALS,
+            SIGNAL_COUNT);
+    fail_unless(QUEUE_EMPTY(uint8_t, &listener.usb->sendQueue));
+
+    translateCanSignal(&listener, &SIGNALS[0], 0xEB, noSendStringHandler, SIGNALS,
+            SIGNAL_COUNT);
+    fail_unless(QUEUE_EMPTY(uint8_t, &listener.usb->sendQueue));
+
+    translateCanSignal(&listener, &SIGNALS[0], 0xEB,
+            noSendBooleanTranslateHandler, SIGNALS, SIGNAL_COUNT);
+    fail_unless(QUEUE_EMPTY(uint8_t, &listener.usb->sendQueue));
 }
 END_TEST
 
@@ -351,6 +379,7 @@ Suite* canreadSuite(void) {
     tcase_add_test(tc_translate, test_preserve_last_value);
     tcase_add_test(tc_translate, test_default_handler);
     tcase_add_test(tc_translate, test_dont_send_same);
+    tcase_add_test(tc_translate, test_translate_respects_send_value);
     suite_add_tcase(s, tc_translate);
 
     return s;
