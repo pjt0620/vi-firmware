@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "lpc17xx_pinsel.h"
 #include "lpc17xx_clkpwr.h"
+#include "lpc17xx_exti.h"
 
 #define POWER_CONTROL_PORT 2
 #define POWER_CONTROL_PIN 13
@@ -62,11 +63,18 @@ void initializePower() {
 
     PINSEL_CFG_Type programButtonPinConfig;
     programButtonPinConfig.OpenDrain = 0;
-    programButtonPinConfig.Pinmode = 1;
     programButtonPinConfig.Funcnum = 1;
+    programButtonPinConfig.Pinmode = PINSEL_PINMODE_PULLUP;
     programButtonPinConfig.Portnum = PROGRAM_BUTTON_PORT;
     programButtonPinConfig.Pinnum = PROGRAM_BUTTON_PIN;
     PINSEL_ConfigPin(&programButtonPinConfig);
+
+    EXTI_InitTypeDef externalInterruptConfig;
+    externalInterruptConfig.EXTI_Line = EXTI_EINT2;
+    externalInterruptConfig.EXTI_Mode = EXTI_MODE_EDGE_SENSITIVE;
+    externalInterruptConfig.EXTI_polarity = EXTI_POLARITY_LOW_ACTIVE_OR_FALLING_EDGE;
+    EXTI_Config(&externalInterruptConfig);
+    EXTI_ClearEXTIFlag(EXTI_EINT2);
 }
 
 void updatePower() {
@@ -89,6 +97,7 @@ void CANActivity_IRQHandler(void) {
 }
 
 void EINT2_IRQHandler(void) {
+    EXTI_ClearEXTIFlag(EXTI_EINT2);
     handleWake();
 }
 
@@ -97,6 +106,7 @@ void enterLowPowerMode() {
     NVIC_EnableIRQ(CANActivity_IRQn);
     NVIC_EnableIRQ(EINT2_IRQn);
 
+    EXTI_ClearEXTIFlag(EXTI_EINT2);
     setPowerPassthroughStatus(false);
 
     // Disable brown-out detection when we go into lower power
