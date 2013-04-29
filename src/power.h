@@ -4,7 +4,7 @@
 namespace openxc {
 namespace power {
 
-/* Public: Initialize any systems replated to power for the microcontroller or
+/** Public: Initialize any systems replated to power for the microcontroller or
  * connected peripherals.
  */
 void initializePower();
@@ -12,7 +12,7 @@ void initializePower();
 // TODO kill this method
 void updatePower();
 
-/* Public: Shut down all peripherals, set up interrupts to wake on CAN activity
+/** Public: Shut down all peripherals, set up interrupts to wake on CAN activity
  * and put the microcontroller into a low power mode.
  *
  * This mode should be suitable for remaining attached to the 12v line of a

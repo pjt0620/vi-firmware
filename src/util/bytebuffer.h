@@ -9,7 +9,7 @@ namespace openxc {
 namespace util {
 namespace bytebuffer {
 
-/* Public: Pass the buffer in the queue to the callback, which should return
+/** Public: Pass the buffer in the queue to the callback, which should return
  * true if an OpenXC message is found and processed, then reset the queue back
  * to empty. If no message is found, keep the queue intact unless the
  * queue is full or corrupted (i.e. it has a NULL character but we stil didn't
@@ -21,7 +21,7 @@ namespace bytebuffer {
  */
 void processQueue(QUEUE_TYPE(uint8_t)* queue, bool (*callback)(uint8_t*));
 
-/* Public: Add the message to the byte queue if there is room, including a CRLF
+/** Public: Add the message to the byte queue if there is room, including a CRLF
  * that will be appended to the message.
  *
  * queue - The queue to add the message.

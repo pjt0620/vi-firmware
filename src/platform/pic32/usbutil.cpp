@@ -130,7 +130,7 @@ void openxc::interface::usb::initializeUsb(UsbDevice* usbDevice) {
     debug("Done.");
 }
 
-/* Private: Arm the given endpoint for a read from the device to host.
+/** Private: Arm the given endpoint for a read from the device to host.
  *
  * This also puts a NUL char in the beginning of the buffer so you don't get
  * confused that it's still a valid message.

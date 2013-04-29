@@ -13,7 +13,7 @@ namespace openxc {
 namespace interface {
 namespace network {
 
-/* Public: A container for an network connection with queues for both input and
+/** Public: A container for an network connection with queues for both input and
  * output.
  *
  * server - An instance of Server which will allow connections from network
@@ -40,17 +40,17 @@ typedef struct {
 #endif // __USE_NETWORK__
 } NetworkDevice;
 
-/* Public: Perform platform-agnostic Network initialization.
+/** Public: Perform platform-agnostic Network initialization.
  */
 void initializeNetworkCommon(NetworkDevice* device);
 
-/* Initializes the network interface with MAC and IP addresses, starts
+/** Public:  Initializes the network interface with MAC and IP addresses, starts
  * listening for connections.
  */
 void initializeNetwork(NetworkDevice* device);
 
-/* Processes the network send queue and sends its bytes to connected network
- * clients.
+/** Public: Processes the network send queue and sends its bytes to connected
+ * network clients.
  */
 void processNetworkSendQueue(NetworkDevice* device);
 

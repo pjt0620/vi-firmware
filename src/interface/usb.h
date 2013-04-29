@@ -17,7 +17,7 @@ namespace openxc {
 namespace interface {
 namespace usb {
 
-/* Public: a container for a CAN translator USB device and associated metadata.
+/** Public: a container for a CAN translator USB device and associated metadata.
  *
  * inEndpoint - The address of the endpoint to use for IN transfers, i.e. device
  *      to host.
@@ -51,17 +51,17 @@ typedef struct {
 #endif // __PIC32__
 } UsbDevice;
 
-/* Public: Perform platform-agnostic USB initialization.
+/** Public: Perform platform-agnostic USB initialization.
  */
 void initializeUsbCommon(UsbDevice*);
 
-/* Public: Initializes the USB controller as a full-speed device with the
+/** Public: Initializes the USB controller as a full-speed device with the
  * configuration specified in usb_descriptors.c. Must be called before
  * any other USB fuctions are used.
  */
 void initializeUsb(UsbDevice*);
 
-/* Public: Pass the next OUT request message to the callback, if available.
+/** Public: Pass the next OUT request message to the callback, if available.
  *
  * Checks if the input handle is not busy, indicating the presence of a new OUT
  * request from the host. If a message is available, the callback is notified
@@ -73,14 +73,14 @@ void initializeUsb(UsbDevice*);
  */
 void readFromHost(UsbDevice* device, bool (*callback)(uint8_t*));
 
-/* Public: Send any bytes in the outgoing data queue over the IN endpoint to the
+/** Public: Send any bytes in the outgoing data queue over the IN endpoint to the
  * host.
  *
  * This function may or may not be blocking - it's implementation dependent.
  */
 void processUsbSendQueue(UsbDevice* device);
 
-/* Public: Send a USB control message on EP0 (the endponit used only for control
+/** Public: Send a USB control message on EP0 (the endponit used only for control
  * transfers).
  *
  * data - An array of up bytes up to the total size of the endpoint (64 bytes
