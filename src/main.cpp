@@ -60,7 +60,7 @@ Listener listener = {&USB_DEVICE,
 #endif // __USE_NETWORK__
 };
 
-/* Public: Update the color and status of a board's light that shows the output
+/** Public: Update the color and status of a board's light that shows the output
  * interface status. This function is intended to be called each time through
  * the main program loop.
  */
@@ -98,7 +98,7 @@ int main(void) {
     return 0;
 }
 
-/* Private: Handle an incoming USB control request.
+/** Private: Handle an incoming USB control request.
  *
  * There are two accepted control requests:
  *

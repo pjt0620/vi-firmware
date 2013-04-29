@@ -68,7 +68,7 @@ void loop() {
     updateDataLights();
 }
 
-/* Public: Update the color and status of a board's light that shows the status
+/** Public: Update the color and status of a board's light that shows the status
  * of the CAN bus. This function is intended to be called each time through the
  * main program loop.
  */

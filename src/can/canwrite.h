@@ -11,7 +11,7 @@ namespace openxc {
 namespace can {
 namespace write {
 
-/* Public: Encode and store value in a bit field for the given signal.
+/** Public: Encode and store value in a bit field for the given signal.
  *
  * The value is converted to engineering units (i.e. any offset or factor used
  * by the signal are reversed) before being set into a 64-bit chunk at the
@@ -29,7 +29,7 @@ namespace write {
  */
 uint64_t encodeCanSignal(CanSignal* signal, float value);
 
-/* Public: Encode and store a value in the bit field for a signal, but using the
+/** Public: Encode and store a value in the bit field for a signal, but using the
  * given data as the starting point.
  *
  * This function is useful when you need to set more than one signal in a single
@@ -46,7 +46,7 @@ uint64_t encodeCanSignal(CanSignal* signal, float value);
  */
 uint64_t encodeCanSignal(CanSignal* signal, float value, uint64_t data);
 
-/* Public: Write the given number to the correct bitfield for the given signal.
+/** Public: Write the given number to the correct bitfield for the given signal.
  *
  * signal - The signal associated with the value.
  * signals - An array of all CAN signals.
@@ -61,7 +61,7 @@ uint64_t encodeCanSignal(CanSignal* signal, float value, uint64_t data);
 uint64_t numberWriter(CanSignal* signal, CanSignal* signals,
         int signalCount, double value, bool* send);
 
-/* Public: The same as numberWriter(CanSignal*, CanSignal*, int, double, bool*),
+/** Public: The same as numberWriter(CanSignal*, CanSignal*, int, double, bool*),
  * but use the data argument as a starting point instead of 0x0.
  *
  * This is useful if you are composing a complete CAN message from multiple
@@ -70,19 +70,19 @@ uint64_t numberWriter(CanSignal* signal, CanSignal* signals,
 uint64_t numberWriter(CanSignal* signal, CanSignal* signals,
         int signalCount, double value, bool* send, uint64_t data);
 
-/* Public: Interpret the JSON value as a double, then do the same as
+/** Public: Interpret the JSON value as a double, then do the same as
  * numberWriter(CanSignal*, CanSignal*, int, double, bool*).
  */
 uint64_t numberWriter(CanSignal* signal, CanSignal* signals,
         int signalCount, cJSON* value, bool* send);
 
-/* Public: Interpret the JSON value as a double, then do the same as
+/** Public: Interpret the JSON value as a double, then do the same as
  * numberWriter(CanSignal*, CanSignal*, int, double, bool*, uint64_t).
  */
 uint64_t numberWriter(CanSignal* signal, CanSignal* signals,
         int signalCount, cJSON* value, bool* send, uint64_t data);
 
-/* Public: Convert the string value to the correct integer value for the given
+/** Public: Convert the string value to the correct integer value for the given
  * CAN signal and write it to the signal's bitfield.
  *
  * signal - The signal associated with the value.
@@ -99,26 +99,26 @@ uint64_t numberWriter(CanSignal* signal, CanSignal* signals,
 uint64_t stateWriter(CanSignal* signal, CanSignal* signals,
         int signalCount, const char* value, bool* send);
 
-/* Public: The same as stateWriter(CanSignal*, CanSignal*, int, const char*,
+/** Public: The same as stateWriter(CanSignal*, CanSignal*, int, const char*,
  * bool*), but use the data argument as the starting point for the CAN message
  * instead of 0x0.
  */
 uint64_t stateWriter(CanSignal* signal, CanSignal* signals,
         int signalCount, const char* value, bool* send, uint64_t data);
 
-/* Public: Interpret the JSON value as a string, then do the same as
+/** Public: Interpret the JSON value as a string, then do the same as
  * stateWriter(CanSignal*, CanSignal*, int, const char*, bool*).
  */
 uint64_t stateWriter(CanSignal* signal, CanSignal* signals,
         int signalCount, cJSON* value, bool* send);
 
-/* Public: Interpret the JSON value as a string, then do the same as
+/** Public: Interpret the JSON value as a string, then do the same as
  * stateWriter(CanSignal*, CanSignal*, int, const char*, bool*, uint64_t).
  */
 uint64_t stateWriter(CanSignal* signal, CanSignal* signals,
         int signalCount, cJSON* value, bool* send, uint64_t data);
 
-/* Public: Write the given boolean value to the correct bitfield for the given
+/** Public: Write the given boolean value to the correct bitfield for the given
  * signal. This will write either a 0 or 1.
  *
  * signal - The signal associated with the value.
@@ -134,26 +134,26 @@ uint64_t stateWriter(CanSignal* signal, CanSignal* signals,
 uint64_t booleanWriter(CanSignal* signal, CanSignal* signals,
         int signalCount, bool value, bool* send);
 
-/* Public: The same as booleanWriter(CanSignal*, CanSignal*, int, bool, bool*),
+/** Public: The same as booleanWriter(CanSignal*, CanSignal*, int, bool, bool*),
  * but use the data argument as the starting point for the CAN message instead
  * of 0x0.
  */
 uint64_t booleanWriter(CanSignal* signal, CanSignal* signals,
         int signalCount, bool value, bool* send, uint64_t data);
 
-/* Public: Interpret the JSON value as a boolean, then do the same as
+/** Public: Interpret the JSON value as a boolean, then do the same as
  * numberWriter(CanSignal*, CanSignal*, int, bool, bool*).
  */
 uint64_t booleanWriter(CanSignal* signal, CanSignal* signals,
         int signalCount, cJSON* value, bool* send);
 
-/* Public: Interpret the JSON value as a boolean, then do the same as
+/** Public: Interpret the JSON value as a boolean, then do the same as
  * numberWriter(CanSignal*, CanSignal*, int, bool, bool*, uint64_t).
  */
 uint64_t booleanWriter(CanSignal* signal, CanSignal* signals,
         int signalCount, cJSON* value, bool* send, uint64_t data);
 
-/* Public: Write a CAN signal with the given value to the bus.
+/** Public: Write a CAN signal with the given value to the bus.
  *
  * Using the provided CanSignal and writer function, convert the cJSON value
  * into a numerical value appropriate for the CAN signal. This may include
@@ -176,7 +176,7 @@ bool sendCanSignal(CanSignal* signal, cJSON* value,
         uint64_t (*writer)(CanSignal*, CanSignal*, int, cJSON*, bool*),
         CanSignal* signals, int signalCount, bool force);
 
-/* Public: Write a CAN signal with the given value to the bus.
+/** Public: Write a CAN signal with the given value to the bus.
  *
  * Just like the above function sendCanSignal(), but the value of force defaults
  * to false.
@@ -185,7 +185,7 @@ bool sendCanSignal(CanSignal* signal, cJSON* value,
         uint64_t (*writer)(CanSignal*, CanSignal*, int, cJSON*, bool*),
         CanSignal* signals, int signalCount);
 
-/* Public: Write a CAN signal with the given value to the bus.
+/** Public: Write a CAN signal with the given value to the bus.
  *
  * Just like the above function sendCanSignal() that accepts a writer function,
  * but uses the CanSignal's value for "writeHandler" instead.
@@ -195,7 +195,7 @@ bool sendCanSignal(CanSignal* signal, cJSON* value,
 bool sendCanSignal(CanSignal* signal, cJSON* value, CanSignal* signals,
         int signalCount, bool force);
 
-/* Public: Write a CAN signal with the given value to the bus.
+/** Public: Write a CAN signal with the given value to the bus.
  *
  * Just like the above function sendCanSignal(), but the value of force defaults
  * to false.
@@ -203,7 +203,7 @@ bool sendCanSignal(CanSignal* signal, cJSON* value, CanSignal* signals,
 bool sendCanSignal(CanSignal* signal, cJSON* value, CanSignal* signals,
         int signalCount);
 
-/* Public: The lowest-level API available to send a CAN message. The byte order
+/** Public: The lowest-level API available to send a CAN message. The byte order
  * of the data is swapped, but otherwise this function queues the data to write
  * out to CAN without any additional processing.
  *
@@ -212,13 +212,13 @@ bool sendCanSignal(CanSignal* signal, cJSON* value, CanSignal* signals,
  */
 void enqueueCanMessage(CanMessage* message, uint64_t data);
 
-/* Public: Write any queued outgoing messages to the CAN bus.
+/** Public: Write any queued outgoing messages to the CAN bus.
  *
  * bus - The CanBus instance that has a queued to be flushed out to CAN.
  */
 void processCanWriteQueue(CanBus* bus);
 
-/* Public: Write a CAN message with the given data and node ID to the bus.
+/** Public: Write a CAN message with the given data and node ID to the bus.
  *
  * Defined per-platform.
  *

@@ -10,7 +10,7 @@ const char* openxc::can::read::NAME_FIELD_NAME = "name";
 const char* openxc::can::read::VALUE_FIELD_NAME = "value";
 const char* openxc::can::read::EVENT_FIELD_NAME = "event";
 
-/* Private: Serialize the root JSON object to a string (ending with a newline)
+/** Private: Serialize the root JSON object to a string (ending with a newline)
  * and send it to the listener.
  *
  * root - The JSON object to send.
@@ -23,7 +23,7 @@ void sendJSON(cJSON* root, Listener* listener) {
     free(message);
 }
 
-/* Private: Combine the given name and value into a JSON object (conforming to
+/** Private: Combine the given name and value into a JSON object (conforming to
  * the OpenXC standard) and send it out to the listener.
  *
  * name - The value for the name field of the OpenXC message.

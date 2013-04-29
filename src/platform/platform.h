@@ -4,7 +4,7 @@
 namespace openxc {
 namespace platform {
 
-/* Public: Perform any one-time, up front initialization required fro the
+/** Public: Perform any one-time, up front initialization required fro the
  * platform the firmware is running on.
  */
 void initializePlatform();
