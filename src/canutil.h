@@ -17,7 +17,7 @@
 // TODO CanMessage and CanBus are temporarily defined outside of the openxc::can
 // namespace because we're not able to used namespaced types with emqueue.
 
-/* Public: A CAN message, particularly for writing to CAN.
+/** Public: A CAN message, particularly for writing to CAN.
  *
  * bus - A pointer to the bus this message is on.
  * id - The ID of the message.
@@ -31,7 +31,7 @@ typedef struct {
 
 QUEUE_DECLARE(CanMessage, 16);
 
-/* Public: A container for a CAN module paried with a certain bus.
+/** Public: A container for a CAN module paried with a certain bus.
  *
  * speed - The bus speed in bits per second (e.g. 500000)
  * address - The address or ID of this node
@@ -66,7 +66,7 @@ namespace can {
 
 extern const int CAN_ACTIVE_TIMEOUT_S;
 
-/* Public: A CAN transceiver message filter.
+/** Public: A CAN transceiver message filter.
  *
  * number - The ID of this filter, e.g. 0, 1, 2.
  * value - The filter's value.
@@ -79,7 +79,7 @@ typedef struct {
     int channel;
 } CanFilter;
 
-/* Public: A state encoded (SED) signal's mapping from numerical values to
+/** Public: A state encoded (SED) signal's mapping from numerical values to
  * OpenXC state names.
  *
  * value - The integer value of the state on the CAN bus.
@@ -90,7 +90,7 @@ typedef struct {
     const char* name;
 } CanSignalState;
 
-/* Public: A CAN signal to decode from the bus and output over USB.
+/** Public: A CAN signal to decode from the bus and output over USB.
  *
  * message     - The message this signal is a part of.
  * genericName - The name of the signal to be output over USB.
@@ -137,7 +137,7 @@ struct CanSignal {
 };
 typedef struct CanSignal CanSignal;
 
-/* Public: The function definition for completely custom OpenXC command
+/** Public: The function definition for completely custom OpenXC command
  * handlers.
  *
  * name - the name field in the message received over USB.
@@ -153,7 +153,7 @@ typedef struct CanSignal CanSignal;
 typedef bool (*CommandHandler)(const char* name, cJSON* value, cJSON* event,
         CanSignal* signals, int signalCount);
 
-/* Public: A command to read from USB and possibly write back to CAN.
+/** Public: A command to read from USB and possibly write back to CAN.
  *
  * For completely customized CAN commands without a 1-1 mapping between an
  * OpenXC message from the host and a CAN signal, you can define the name of the
@@ -171,18 +171,18 @@ typedef struct {
     CommandHandler handler;
 } CanCommand;
 
-/* Public: Initialize the CAN controller. See inline comments for description of
+/** Public: Initialize the CAN controller. See inline comments for description of
  * the process.
  *
  * bus - A CanBus struct defining the bus's metadata for initialization.
  */
 void initializeCan(CanBus* bus);
 
-/* Public: Perform platform-agnostic CAN initialization.
+/** Public: Perform platform-agnostic CAN initialization.
  */
 void initializeCanCommon(CanBus* bus);
 
-/* Public: Check if the device is connected to an active CAN bus, i.e. it's
+/** Public: Check if the device is connected to an active CAN bus, i.e. it's
  * received a message in the recent past.
  *
  * Returns true if a message was received on the CAN bus within
@@ -190,7 +190,7 @@ void initializeCanCommon(CanBus* bus);
  */
 bool canBusActive(CanBus* bus);
 
-/* Public: Look up the CanSignal representation of a signal based on its generic
+/** Public: Look up the CanSignal representation of a signal based on its generic
  * name. The signal may or may not be writable - the first result will be
  * returned.
  *
@@ -202,7 +202,7 @@ bool canBusActive(CanBus* bus);
  */
 CanSignal* lookupSignal(const char* name, CanSignal* signals, int signalCount);
 
-/* Public: Look up the CanSignal representation of a signal based on its generic
+/** Public: Look up the CanSignal representation of a signal based on its generic
  * name.
  *
  * name - The generic, OpenXC name of the signal.
@@ -215,7 +215,7 @@ CanSignal* lookupSignal(const char* name, CanSignal* signals, int signalCount);
 CanSignal* lookupSignal(const char* name, CanSignal* signals, int signalCount,
         bool writable);
 
-/* Public: Look up the CanCommand representation of a command based on its
+/** Public: Look up the CanCommand representation of a command based on its
  * generic name.
  *
  * name - The generic, OpenXC name of the command.
@@ -226,7 +226,7 @@ CanSignal* lookupSignal(const char* name, CanSignal* signals, int signalCount,
  */
 CanCommand* lookupCommand(const char* name, CanCommand* commands, int commandCount);
 
-/* Public: Look up a CanSignalState for a CanSignal by its textual name. Use
+/** Public: Look up a CanSignalState for a CanSignal by its textual name. Use
  * this to find the numerical value to write back to CAN when a string state is
  * received from the user.
  *
@@ -240,7 +240,7 @@ CanCommand* lookupCommand(const char* name, CanCommand* commands, int commandCou
 CanSignalState* lookupSignalState(const char* name, CanSignal* signal,
         CanSignal* signals, int signalCount);
 
-/* Public: Look up a CanSignalState for a CanSignal by its numerical value.
+/** Public: Look up a CanSignalState for a CanSignal by its numerical value.
  * Use this to find the string equivalent value to write over USB when a float
  * value is received from CAN.
  *

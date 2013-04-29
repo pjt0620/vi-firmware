@@ -12,7 +12,7 @@ using openxc::interface::network::NetworkDevice;
 namespace openxc {
 namespace interface {
 
-/* Public: A container for all output devices that want to be notified of new
+/** Public: A container for all output devices that want to be notified of new
  *      messages from the CAN bus.
  *
  * This structure sets up a standard interface for all output devices to receive
@@ -30,7 +30,7 @@ typedef struct {
     NetworkDevice* network;
 } Listener;
 
-/* Public: Queue the message to send on all of the interfaces registered with
+/** Public: Queue the message to send on all of the interfaces registered with
  *      the listener. If the any of the queues does not have sufficient capacity
  *      to store the message, it will be dropped for that interface only (i.e.
  *      UART can be overloaded and dropping messages but USB will continue
@@ -42,7 +42,7 @@ typedef struct {
  */
 void sendMessage(Listener* listener, uint8_t* message, int messageSize);
 
-/* Public: Perform interface-specific functions to flush all message queues out
+/** Public: Perform interface-specific functions to flush all message queues out
  *      to their respective physical interfaces.
  *
  * TODO This is the tricky part with making the listener more generic - this

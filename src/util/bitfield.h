@@ -7,7 +7,7 @@ namespace openxc {
 namespace util {
 namespace bitfield {
 
-/* Public: Reads a subset of bits from a byte array.
+/** Public: Reads a subset of bits from a byte array.
  *
  * data - the bytes in question.
  * startPos - the starting index of the bit field (beginning from 0).
@@ -41,7 +41,7 @@ namespace bitfield {
  */
 uint64_t getBitField(uint64_t data, int startPos, int numBits, bool bigEndian);
 
-/* Public: Set the bit field in the given data array to the new value.
+/** Public: Set the bit field in the given data array to the new value.
  *
  * data - a byte array with size at least startPos + numBits.
  * value - the value to set in the bit field.
@@ -49,7 +49,7 @@ uint64_t getBitField(uint64_t data, int startPos, int numBits, bool bigEndian);
  */
 void setBitField(uint64_t* data, uint64_t value, int startPos, int numBits);
 
-/* Public: Retreive the nth byte out of 8 bytes in a uint64_t.
+/** Public: Retreive the nth byte out of 8 bytes in a uint64_t.
  *
  * source - the source data to retreive the byte from.
  * byteNum - the index of the byte, starting at 0 and assuming big-endian order.

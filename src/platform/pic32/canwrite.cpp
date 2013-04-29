@@ -3,7 +3,7 @@
 #include "util/bitfield.h"
 #include "util/log.h"
 
-/* Private: Copy message data to destination buffer as big endian, as opposed to the
+/** Private: Copy message data to destination buffer as big endian, as opposed to the
  * micro's little endian (hence we can't just use memcpy).
  *
  * source - source data to copy.

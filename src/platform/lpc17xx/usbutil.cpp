@@ -54,7 +54,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     USB_DEVICE.configured = true;
 }
 
-/* Private: Flush any queued data out to the USB host. */
+/** Private: Flush any queued data out to the USB host. */
 static void sendToHost(UsbDevice* usbDevice) {
     if(!usbDevice->configured) {
         return;
@@ -80,7 +80,7 @@ static void sendToHost(UsbDevice* usbDevice) {
     Endpoint_SelectEndpoint(previousEndpoint);
 }
 
-/* Private: Detect if USB VBUS is active.
+/** Private: Detect if USB VBUS is active.
  *
  * This isn't useful if there's no diode between an external 12v/9v power supply
  * (e.g. vehicle power from OBD-II) and the 5v rail, because then VBUS high when
@@ -93,7 +93,7 @@ bool vbusDetected() {
     return (GPIO_ReadValue(VBUS_PORT) & (1 << VBUS_PIN)) != 0;
 }
 
-/* Private: Detect if a USB host is actually attached, regardless of VBUS.
+/** Private: Detect if a USB host is actually attached, regardless of VBUS.
  *
  * This is a bit hacky, as normally you should rely on VBUS to detect if USB is
  * connected. See vbusDetected() for reasons why we need this workaround on the
@@ -117,7 +117,7 @@ bool usbHostDetected() {
     return true;
 }
 
-/* Private: Configure I/O pins used to detect if USB is connected to a host. */
+/** Private: Configure I/O pins used to detect if USB is connected to a host. */
 void configureUsbDetection() {
     PINSEL_CFG_Type vbusPinConfig;
     vbusPinConfig.Funcnum = VBUS_FUNCNUM;

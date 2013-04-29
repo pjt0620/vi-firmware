@@ -30,14 +30,14 @@ extern Palette COLORS;
 
 void initializeLights();
 
-/* Public: Display the given color on the light.
+/** Public: Display the given color on the light.
  *
  * light - the light to change.
  * color - the RGB color for the light.
  */
 void enable(Light light, RGB color);
 
-/* Public: Display the given color on the light, taking the given duration in
+/** Public: Display the given color on the light, taking the given duration in
  * ms to change from the light's current color to the new one.
  *
  * light - the light to change.
@@ -47,20 +47,20 @@ void enable(Light light, RGB color);
  */
 void enable(Light light, RGB color, int duration);
 
-/* Public: Turn off a light.
+/** Public: Turn off a light.
  *
  * light - the light to turn off.
  */
 void disable(Light light);
 
-/* Public: Dim a light down to off slowly
+/** Public: Dim a light down to off slowly
  *
  * light - the light to turn off.
  * duration - the amount of time in ms to take to turn the light off.
  */
 void disable(Light light, int duration);
 
-/* Public: Flash a light with the given color.
+/** Public: Flash a light with the given color.
  *
  * light - the light to flash.
  * color - the color to flash on the light.

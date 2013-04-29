@@ -11,7 +11,7 @@ CAN can2Actual(CAN::CAN2);
 CAN* can1 = &can1Actual;
 CAN* can2 = &can2Actual;
 
-/* Private: Initializes message filters on the CAN controller.
+/** Private: Initializes message filters on the CAN controller.
  *
  * bus - The CanBus instance to configure the filters for.
  * filters - An array of filters to initialize.

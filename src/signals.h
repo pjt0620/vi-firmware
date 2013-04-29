@@ -11,44 +11,44 @@ using openxc::can::CanSignal;
 namespace openxc {
 namespace signals {
 
-/* Public: Perform any one-time initialization necessary. This is called when
+/** Public: Perform any one-time initialization necessary. This is called when
  * the microcontroller first starts.
  */
 void initializeSignals();
 
-/* Public: The number of CAN buses to read. This is limited to 2, as the
+/** Public: The number of CAN buses to read. This is limited to 2, as the
  * hardware controller only has 2 CAN channels.
  */
 int getCanBusCount();
 
-/* Public: Return an array of all CAN signals you are able to process and
+/** Public: Return an array of all CAN signals you are able to process and
  * translate to send over USB.
  */
 CanSignal* getSignals();
 
-/* Public: Return an array of all OpenXC CAN commnds you are able to process and
+/** Public: Return an array of all OpenXC CAN commnds you are able to process and
  * write back to CAN with a custom handler. Commands not defined here are
  * handled using a 1-1 mapping from the signals list.
  */
 CanCommand* getCommands();
 
-/* Public: Return the length of the array returned by getCommandCount(). */
+/** Public: Return the length of the array returned by getCommandCount(). */
 int getCommandCount();
 
-/* Public: Return the length of the array returned by getSignals(). */
+/** Public: Return the length of the array returned by getSignals(). */
 int getSignalCount();
 
-/* Public: Return an array of the metadata for the 2 CAN buses you want to
+/** Public: Return an array of the metadata for the 2 CAN buses you want to
  * monitor. The size of this array is fixed at 2.
  */
 CanBus* getCanBuses();
 
-/* Public: Return the name of the vehicle or architecture this translator is
+/** Public: Return the name of the vehicle or architecture this translator is
  * currently programmed for.
  */
 const char* getMessageSet();
 
-/* Public: Decode CAN signals from raw CAN messages, translate from engineering
+/** Public: Decode CAN signals from raw CAN messages, translate from engineering
  * units to something more human readable, and send the resulting value over USB
  * as an OpenXC-style JSON message.
  *
@@ -63,7 +63,7 @@ const char* getMessageSet();
  */
 void decodeCanMessage(Listener* listener, CanBus* bus, int id, uint64_t data);
 
-/* Public: Initialize an array of the CAN message filters that should be set for
+/** Public: Initialize an array of the CAN message filters that should be set for
  * the CAN module with the given address.
  *
  * If an array is of length 0, the CAN acceptance filter will be disabled and

@@ -16,7 +16,7 @@ extern const char* NAME_FIELD_NAME;
 extern const char* VALUE_FIELD_NAME;
 extern const char* EVENT_FIELD_NAME;
 
-/* Public: Perform no parsing or processing of the CAN message, just encapsulate
+/** Public: Perform no parsing or processing of the CAN message, just encapsulate
  * it in a JSON message with "id" and "data" attributes and send it out to the
  * listeners.
  *
@@ -31,7 +31,7 @@ extern const char* EVENT_FIELD_NAME;
  */
 void passthroughCanMessage(Listener* listener, int id, uint64_t data);
 
-/* Public: Parse a CAN signal from a CAN message, apply the required
+/** Public: Parse a CAN signal from a CAN message, apply the required
  * transforations and send the result to the listener;
  *
  * listener - The listener device to send the final formatted message on.
@@ -41,7 +41,7 @@ void passthroughCanMessage(Listener* listener, int id, uint64_t data);
 void translateCanSignal(Listener* listener, CanSignal* signal, uint64_t data,
         CanSignal* signals, int signalCount);
 
-/* Public: Parse a CAN signal from a CAN message, apply the required
+/** Public: Parse a CAN signal from a CAN message, apply the required
  * transforations and also run the final float value through the handler
  * function before sending the result to the listener.
  *
@@ -57,7 +57,7 @@ void translateCanSignal(Listener* listener, CanSignal* signal,
         float (*handler)(CanSignal*, CanSignal*, int, float, bool*),
         CanSignal* signals, int signalCount);
 
-/* Public: Parse a CAN signal from a CAN message, apply the required
+/** Public: Parse a CAN signal from a CAN message, apply the required
  * transforations and (expecting the float value to be 0 or 1) convert it to a
  * boolean.
  *
@@ -73,7 +73,7 @@ void translateCanSignal(Listener* listener, CanSignal* signal,
         bool (*handler)(CanSignal*, CanSignal*, int, float, bool*),
         CanSignal* signals, int signalCount);
 
-/* Public: Parse a CAN signal from a CAN message, apply the required
+/** Public: Parse a CAN signal from a CAN message, apply the required
  * transforations and also runs the float value through the handler function to
  * convert it to a string describing a valid state for the CAN signal. No error
  * checking is performed on the handler, so if a NULL is returned by the handler
@@ -93,7 +93,7 @@ void translateCanSignal(Listener* listener, CanSignal* signal,
         const char* (*handler)(CanSignal*, CanSignal*, int, float, bool*),
         CanSignal* signals, int signalCount);
 
-/* Public: Send the given name and value out to the listener in an OpenXC JSON
+/** Public: Send the given name and value out to the listener in an OpenXC JSON
  * message followed by a newline.
  *
  * name - The value for the name field of the OpenXC message.
@@ -102,7 +102,7 @@ void translateCanSignal(Listener* listener, CanSignal* signal,
  */
 void sendNumericalMessage(const char* name, float value, Listener* listener);
 
-/* Public: Send the given name and value out to the listener in an OpenXC JSON
+/** Public: Send the given name and value out to the listener in an OpenXC JSON
  * message followed by a newline.
  *
  * name - The value for the name field of the OpenXC message.
@@ -111,7 +111,7 @@ void sendNumericalMessage(const char* name, float value, Listener* listener);
  */
 void sendStringMessage(const char* name, const char* value, Listener* listener);
 
-/* Public: Send the given name and value out to the listener in an OpenXC JSON
+/** Public: Send the given name and value out to the listener in an OpenXC JSON
  * message followed by a newline.
  *
  * name - The value for the name field of the OpenXC message.
@@ -120,7 +120,7 @@ void sendStringMessage(const char* name, const char* value, Listener* listener);
  */
 void sendBooleanMessage(const char* name, bool value, Listener* listener);
 
-/* Public: Send the given name, value and event out to the listener in an OpenXC
+/** Public: Send the given name, value and event out to the listener in an OpenXC
  * JSON message followed by a newline.
  *
  * name - The value for the name field of the OpenXC message.
@@ -131,7 +131,7 @@ void sendBooleanMessage(const char* name, bool value, Listener* listener);
 void sendEventedBooleanMessage(const char* name, const char* value, bool event,
         Listener* listener);
 
-/* Public: Send the given name, value and event out to the listener in an OpenXC
+/** Public: Send the given name, value and event out to the listener in an OpenXC
  * JSON message followed by a newline.
  *
  * name - The value for the name field of the OpenXC message.
@@ -142,7 +142,7 @@ void sendEventedBooleanMessage(const char* name, const char* value, bool event,
 void sendEventedStringMessage(const char* name, const char* value,
         const char* event, Listener* listener);
 
-/* Public: Send the given name, value and event out to the listener in an OpenXC
+/** Public: Send the given name, value and event out to the listener in an OpenXC
  * JSON message followed by a newline.
  *
  * name - The value for the name field of the OpenXC message.
@@ -153,7 +153,7 @@ void sendEventedStringMessage(const char* name, const char* value,
 void sendEventedFloatMessage(const char* name, const char* value, float event,
         Listener* listener);
 
-/* Public: Parse a CAN signal from a message and apply required transformation.
+/** Public: Parse a CAN signal from a message and apply required transformation.
  *
  * signal - The details of the signal to decode and forward.
  * data   - The raw bytes of the CAN message that contains the signal, assumed
@@ -163,7 +163,7 @@ void sendEventedFloatMessage(const char* name, const char* value, float event,
  */
 float decodeCanSignal(CanSignal* signal, uint64_t data);
 
-/* Public: Finds and returns the corresponding string state for an integer
+/** Public: Finds and returns the corresponding string state for an integer
  *         value.
  *
  * signal  - The details of the signal that contains the state mapping.
@@ -180,7 +180,7 @@ float decodeCanSignal(CanSignal* signal, uint64_t data);
 const char* stateHandler(CanSignal* signal, CanSignal* signals, int signalCount,
         float value, bool* send);
 
-/* Public: Coerces a numerical value to a boolean.
+/** Public: Coerces a numerical value to a boolean.
  *
  * signal  - The details of the signal that contains the state mapping.
  * signals - The list of all signals
@@ -195,7 +195,7 @@ const char* stateHandler(CanSignal* signal, CanSignal* signals, int signalCount,
 bool booleanHandler(CanSignal* signal, CanSignal* signals, int signalCount,
         float value, bool* send);
 
-/* Public: Store the value of a signal, but flip the send flag to false.
+/** Public: Store the value of a signal, but flip the send flag to false.
  *
  * signal  - The details of the signal that contains the state mapping.
  * signals - The list of all signals.
@@ -209,7 +209,7 @@ bool booleanHandler(CanSignal* signal, CanSignal* signals, int signalCount,
 float ignoreHandler(CanSignal* signal, CanSignal* signals, int signalCount,
         float value, bool* send);
 
-/* Public: Store the value of a signal, but flip the send flag to false.
+/** Public: Store the value of a signal, but flip the send flag to false.
  *
  * signal  - The details of the signal that contains the state mapping.
  * signals - The list of all signals.
@@ -223,7 +223,7 @@ float ignoreHandler(CanSignal* signal, CanSignal* signals, int signalCount,
 float passthroughHandler(CanSignal* signal, CanSignal* signals, int signalCount,
         float value, bool* send);
 
-/* Public: Determine if the received signal should be sent out and update
+/** Public: Determine if the received signal should be sent out and update
  * signal metadata.
  *
  * signal - The signal to look for in the CAN message data.
@@ -235,7 +235,7 @@ float passthroughHandler(CanSignal* signal, CanSignal* signals, int signalCount,
  */
 float preTranslate(CanSignal* signal, uint64_t data, bool* send);
 
-/* Public: Update signal metadata after translating and sending.
+/** Public: Update signal metadata after translating and sending.
  *
  * We keep track of the last value of each CAN signal (in its raw float form),
  * but we can't update the value until after all translation has happened,
