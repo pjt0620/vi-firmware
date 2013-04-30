@@ -9,17 +9,6 @@ OpenXC CAN Translator
 :Documentation: http://openxcplatform.com/cantranslator
 :Source: http://github.com/openxc/cantranslator
 
-.. toctree::
-    :hidden:
-    :glob:
-
-    installation/installation
-    installation/compiling
-    installation/binary
-    installation/testing
-
-    output/*
-
 About
 =====
 
@@ -80,6 +69,15 @@ See the `output format`_ section of the `OpenXC website`_ for details.
     :glob:
 
     output/*
+
+Code Details
+============
+
+.. toctree::
+    :maxdepth: 1
+    :glob:
+
+    code/*
 
 Contributing
 ==============
