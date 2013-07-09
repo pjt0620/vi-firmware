@@ -42,7 +42,7 @@ endif
 
 SKIP_SUFFIX_CHECK = 1
 
-UART_BAUDRATE = 115200
+MONITOR_BAUDRATE = 115200
 
 OSTYPE := $(shell uname)
 
@@ -65,6 +65,9 @@ ifndef SERIAL_PORT
 		endif
 	endif
 endif
+
+# Force compatibiltiy with Arduino-Makefile
+ARDUINO_PORT = $(SERIAL_PORT)
 
 CPPFLAGS += -G0 -D__PIC32__ -D$(PLATFORM) $(CC_SYMBOLS)
 
