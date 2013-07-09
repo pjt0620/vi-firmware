@@ -40,7 +40,6 @@ ifndef CAN_EMULATOR
 ARDUINO_LIBS += chipKITCAN
 endif
 
-NO_CORE_MAIN_FUNCTION = 1
 SKIP_SUFFIX_CHECK = 1
 
 UART_BAUDRATE = 115200
@@ -67,7 +66,7 @@ ifndef SERIAL_PORT
 	endif
 endif
 
-EXTRA_CPPFLAGS += -G0 -D__PIC32__ -D$(PLATFORM) $(CC_SYMBOLS)
+CPPFLAGS += -G0 -D__PIC32__ -D$(PLATFORM) $(CC_SYMBOLS)
 
 CHIPKIT_LIBRARY_AGREEMENT_URL = http://www.digilentinc.com/Agreement.cfm?DocID=DSD-0000318
 
@@ -93,17 +92,17 @@ $(error chipKIT Network library missing - run "script/bootstrap.sh" to download)
 endif
 endif
 
-ARDUINO_MK_EXISTS = $(shell test -e libs/arduino.mk/chipKIT.mk; echo $$?)
+ARDUINO_MK_EXISTS = $(shell test -e libs/Arduino-Makefile/arduino-mk/chipKIT.mk; echo $$?)
 ifneq ($(ARDUINO_MK_EXISTS),0)
-$(error arduino.mk library missing - run "script/bootstrap.sh")
+$(error Arduino-Makefile library missing - run "script/bootstrap.sh")
 endif
 
 USER_LIB_PATH = ./libs
-ARDUINO_MAKEFILE_HOME = libs/arduino.mk
+ARDUINO_MAKEFILE_HOME = libs/Arduino-Makefile
 
 LOCAL_C_SRCS = $(CROSSPLATFORM_C_SRCS) $(wildcard platform/pic32/*.c)
 LOCAL_CPP_SRCS = $(CROSSPLATFORM_CPP_SRCS) $(wildcard platform/pic32/*.cpp)
 
-include $(ARDUINO_MAKEFILE_HOME)/chipKIT.mk
+include $(ARDUINO_MAKEFILE_HOME)/arduino-mk/chipKIT.mk
 
 flash: upload
