@@ -49,6 +49,8 @@ bool receiveWriteRequest(uint8_t*);
 void updateDataLights();
 void logBusStatistics();
 
+static uint8_t MESSAGE_IDS[0x7ff];
+
 void setup() {
     initializeAllCan();
     signals::initialize();
@@ -75,6 +77,14 @@ void loop() {
 void logBusStatistics() {
     static unsigned long lastTimeLogged;
     if(time::systemTimeMs() - lastTimeLogged > BUS_STATS_LOG_FREQUENCY_S * 1000) {
+        int messageCount = 0;
+        for(int i = 0; i < 0x7ff; i++) {
+            if(MESSAGE_IDS[i] == 1) {
+                ++messageCount;
+            }
+        }
+        debug("Unique CAN message IDs received across all buses: %d",
+                messageCount);
         for(int i = 0; i < getCanBusCount(); i++) {
             CanBus* bus = &getCanBuses()[i];
             float totalDataKB = bus->messagesReceived *
@@ -198,10 +208,12 @@ bool receiveWriteRequest(uint8_t* message) {
 void receiveCan(Pipeline* pipeline, CanBus* bus) {
     // TODO what happens if we process until the queue is empty?
     if(!QUEUE_EMPTY(CanMessage, &bus->receiveQueue)) {
+
         CanMessage message = QUEUE_POP(CanMessage, &bus->receiveQueue);
         decodeCanMessage(pipeline, bus, message.id, message.data);
         bus->lastMessageReceived = time::systemTimeMs();
 
+        MESSAGE_IDS[message.id] = 1;
         ++bus->messagesReceived;
     }
 }
