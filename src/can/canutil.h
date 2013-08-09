@@ -91,7 +91,7 @@ struct CanMessage {
 };
 typedef struct CanMessage CanMessage;
 
-QUEUE_DECLARE(CanMessage, 16);
+QUEUE_DECLARE(CanMessage, 32);
 
 /* Public: A container for a CAN module paried with a certain bus.
  *
@@ -119,6 +119,8 @@ struct CanBus {
     void (*interruptHandler)();
     bool (*writeHandler)(CanBus*, CanMessage);
     unsigned long lastMessageReceived;
+    unsigned int messagesReceived;
+    unsigned int messagesDropped;
     uint8_t buffer[BUS_MEMORY_BUFFER_SIZE];
     QUEUE_TYPE(CanMessage) sendQueue;
     QUEUE_TYPE(CanMessage) receiveQueue;
